@@ -1,13 +1,52 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import "./App.css";
+import "@rainbow-me/rainbowkit/styles.css";
+import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { configureChains, createConfig, WagmiConfig } from "wagmi";
+import {
+  mainnet,
+  polygon,
+  optimism,
+  arbitrum,
+  zora,
+  goerli,
+} from "wagmi/chains";
+import { alchemyProvider } from "wagmi/providers/alchemy";
+import { publicProvider } from "wagmi/providers/public";
+import "./index.css";
+import App from "./App";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import reportWebVitals from "./reportWebVitals";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const { chains, publicClient, webSocketPublicClient } = configureChains(
+  [mainnet, polygon, optimism, arbitrum, zora],
+  [
+    alchemyProvider({ apiKey: process.env.REACT_APP_ALCHEMY_ID }),
+    publicProvider(),
+  ]
+);
+
+const { connectors } = getDefaultWallets({
+  appName: "Wildcards",
+  projectId: process.env.REACT_APP_PROJECT_ID,
+  chains,
+});
+
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors,
+  publicClient,
+  webSocketPublicClient,
+});
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    <WagmiConfig config={wagmiConfig}>
+      <RainbowKitProvider chains={chains}>
+        <App />
+      </RainbowKitProvider>
+    </WagmiConfig>
   </React.StrictMode>
 );
 
