@@ -1,7 +1,7 @@
-import { Col, Row } from "antd";
+import { Row } from "antd";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import ActiveStateContext from "./Context";
 
 const Header = () => {

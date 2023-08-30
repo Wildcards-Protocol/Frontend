@@ -3,7 +3,7 @@ import { utils } from "ethers";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Header from "./Header";
 import ActiveStateContext from "./Context";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { Button, message, Space, Steps, Input } from "antd";
 import "../App.css";
 import { mainnet } from "viem/chains";
@@ -79,19 +79,6 @@ const Home = () => {
   const [domainSelectedFromList, setDomainSelectedFromList] = useState({});
   const [networkSelectedFromList, setNetworkSelectedFromList] = useState({});
   const [nftAddress, setNftAddress] = useState("");
-
-  useEffect(() => {
-    if (address) {
-      fetchAddressDomains();
-    }
-  }, [address]);
-
-  useEffect(() => {
-    if (nftAddress) {
-      nftAddress.preventDefault();
-      console.log(nftAddress.target.value);
-    }
-  }, [nftAddress]);
 
   const stepOneComponent = () => {
     const newDomainList = domainList.map((domain) => {
@@ -289,8 +276,8 @@ const Home = () => {
           type: "success",
           content: "Transaction successful",
         });
-        setStep(1);
-        setIsStepOne(false);
+        setStep(0);
+        setIsStepOne(true);
       })
       .catch((error) => {
         messageApi.open({
