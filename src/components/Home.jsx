@@ -3,12 +3,13 @@ import { utils } from "ethers";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Header from "./Header";
 import ActiveStateContext from "./Context";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button, message, Space, Steps, Input } from "antd";
 import "../App.css";
 import { mainnet } from "viem/chains";
 import { createWalletClient, custom } from "viem";
 import Select from "react-select";
+import bg from "../bg.svg";
 
 const Home = () => {
   const { address } = useContext(ActiveStateContext);
@@ -67,6 +68,12 @@ const Home = () => {
       type: "function",
     },
   ];
+
+  useEffect(() => {
+    if (address) {
+      fetchAddressDomains();
+    }
+  }, [address]);
 
   const walletClient = createWalletClient({
     chain: mainnet,
@@ -304,10 +311,11 @@ const Home = () => {
   ];
 
   return (
-    <>
+    <div
+      style={{ backgroundImage: `url(${bg})`, height: "100vh", width: "100%" }}
+    >
       <div
         style={{
-          backgroundColor: "white",
           margin: 50,
           padding: 70,
           display: "flex",
@@ -340,7 +348,7 @@ const Home = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
