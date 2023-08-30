@@ -16,21 +16,18 @@ const Header = () => {
     },
   });
 
-  const { setAddress, setIsConnected, setSigner } =
-    useContext(ActiveStateContext);
+  const { setAddress, setIsConnected } = useContext(ActiveStateContext);
   return (
     <>
-      <Row justify="center" style={{ padding: "20px" }}>
-        <Col span={5} offset={11} type="flex" align="middle">
-          <ConnectButton
-            showBalance={false}
-            chainStatus={"none"}
-            accountStatus={{
-              smallScreen: "avatar",
-              largeScreen: "full",
-            }}
-          />
-        </Col>
+      <Row justify="end" style={{ padding: "20px" }}>
+        <ConnectButton
+          showBalance={false}
+          chainStatus={"none"}
+          accountStatus={{
+            smallScreen: "avatar",
+            largeScreen: "full",
+          }}
+        />
       </Row>
     </>
   );
