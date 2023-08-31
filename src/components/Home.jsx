@@ -6,14 +6,17 @@ import ActiveStateContext from "./Context";
 import React, { useContext, useEffect, useState } from "react";
 import { Button, message, Space, Steps, Input } from "antd";
 import "../App.css";
-import { mainnet } from "viem/chains";
-import { createWalletClient, custom } from "viem";
+import { flare, mainnet } from "viem/chains";
+import { normalize } from "viem/ens";
+import { createWalletClient, custom, createPublicClient, http } from "viem";
 import Select from "react-select";
 import bg from "../bg.svg";
+import Web3 from "web3";
 
 const Home = () => {
   const { address } = useContext(ActiveStateContext);
   const [messageApi, contextHolder] = message.useMessage();
+
   const resolverAbi = [
     {
       constant: false,
@@ -79,6 +82,12 @@ const Home = () => {
     chain: mainnet,
     transport: custom(window.ethereum),
   });
+
+  const publicClient = createPublicClient({
+    chain: mainnet,
+    transport: http(),
+  });
+
   const isMobile = window.innerWidth <= 400;
   const [domainList, setDomainList] = useState([]);
   const [isStepOne, setIsStepOne] = useState(true);
@@ -86,6 +95,11 @@ const Home = () => {
   const [domainSelectedFromList, setDomainSelectedFromList] = useState({});
   const [networkSelectedFromList, setNetworkSelectedFromList] = useState({});
   const [nftAddress, setNftAddress] = useState("");
+  const [resolverContractAddress, setResolverContractAddress] = useState(
+    "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+  );
+  const [isSetResolverButtonEnabled, setIsSetResolverButtonEnabled] =
+    useState(true);
 
   const stepOneComponent = () => {
     const newDomainList = domainList.map((domain) => {
@@ -124,32 +138,10 @@ const Home = () => {
               </div>
             </Space>
             <Space wrap>
-              <div
-                style={{
-                  width: "400px",
-                  marginTop: "40px",
-                }}
-              >
-                <Select
-                  placeholder="Select your network"
-                  options={[
-                    {
-                      value: 1,
-                      label: "Ethereum",
-                    },
-                    {
-                      value: 10,
-                      label: "Optimism",
-                    },
-                  ]}
-                  onChange={setNetworkSelectedFromList}
-                />
-              </div>
-            </Space>
-            <Space wrap>
               <Button
                 size={"large"}
                 type="primary"
+                disabled={isSetResolverButtonEnabled}
                 style={{
                   marginTop: "40px",
                   alignSelf: "center",
@@ -157,7 +149,7 @@ const Home = () => {
                 }}
                 onClick={handleConnect}
               >
-                Connect
+                Set Resolver
               </Button>
             </Space>
           </div>
@@ -191,8 +183,33 @@ const Home = () => {
                   marginTop: "40px",
                 }}
               >
+                <Select
+                  placeholder="Select your network"
+                  autoFocus={true}
+                  options={[
+                    {
+                      value: 1,
+                      label: "Ethereum",
+                    },
+                    {
+                      value: 10,
+                      label: "Optimism",
+                    },
+                  ]}
+                  onChange={setNetworkSelectedFromList}
+                />
+              </div>
+            </Space>
+            <Space wrap>
+              <div
+                style={{
+                  width: "400px",
+                  marginTop: "40px",
+                }}
+              >
                 <Input
                   placeholder="Enter NFT address"
+                  style={{ minHeight: "38px", color: "hsl(0, 0%, 50%)" }}
                   onChange={setNftAddress}
                 />
               </div>
@@ -235,32 +252,43 @@ const Home = () => {
   };
 
   const handleConnect = () => {
-    walletClient
-      .writeContract({
-        address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-        abi: resolverAbi,
-        functionName: "setResolver",
-        args: [
-          utils.namehash(domainSelectedFromList.value),
-          "0x53e42d7b919C72678996C3F3486F93E75946A47C",
-        ],
-        account: address,
+    publicClient
+      .getEnsResolver({
+        name: normalize(domainSelectedFromList.value),
       })
-      .then((transactionResponse) => {
-        console.log("Transaction response is " + transactionResponse);
-        messageApi.open({
-          type: "success",
-          content: "Transaction successful",
-        });
-        setStep(1);
-        setIsStepOne(false);
-      })
-      .catch((error) => {
-        messageApi.open({
-          type: "error",
-          content: "Transaction failed.",
-        });
-        console.log("Transaction response ERROR is " + error);
+      .then((resolverAddress) => {
+        const resolve =
+          resolverAddress === "0x53e42d7b919C72678996C3F3486F93E75946A47C";
+        if (!resolve) {
+          walletClient
+            .writeContract({
+              address: resolverContractAddress,
+              abi: resolverAbi,
+              functionName: "setResolver",
+              args: [
+                utils.namehash(domainSelectedFromList.value),
+                "0x53e42d7b919C72678996C3F3486F93E75946A47C",
+              ],
+              account: address,
+            })
+            .then((transactionResponse) => {
+              messageApi.open({
+                type: "success",
+                content: "Transaction successful",
+              });
+              setStep(1);
+              setIsStepOne(false);
+            })
+            .catch((error) => {
+              messageApi.open({
+                type: "error",
+                content: "Transaction failed.",
+              });
+            });
+        } else {
+          setStep(1);
+          setIsStepOne(false);
+        }
       });
   };
 
@@ -278,7 +306,6 @@ const Home = () => {
         account: address,
       })
       .then((transactionResponse) => {
-        console.log("Transaction response is " + transactionResponse);
         messageApi.open({
           type: "success",
           content: "Transaction successful",
@@ -291,11 +318,19 @@ const Home = () => {
           type: "error",
           content: "Transaction failed.",
         });
-        console.log("Transaction response ERROR is " + error);
       });
   };
 
   const handleSelection = (valueSelected) => {
+    const web3 = new Web3(window.ethereum);
+    web3.eth.ens.getOwner(valueSelected.value).then(function (address) {
+      if (address === "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401") {
+        setResolverContractAddress(address);
+      }
+    });
+
+    setIsSetResolverButtonEnabled(false);
+
     valueSelected
       ? setDomainSelectedFromList(valueSelected)
       : setDomainSelectedFromList("");
