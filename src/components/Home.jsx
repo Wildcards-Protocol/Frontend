@@ -81,7 +81,7 @@ const Home = () => {
 
   const walletClient = createWalletClient({
     chain: mainnet,
-    transport: custom(window.ethereum),
+    transport: http(),
   });
 
   const publicClient = createPublicClient({
