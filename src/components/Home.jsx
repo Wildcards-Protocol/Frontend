@@ -278,7 +278,7 @@ const Home = () => {
             .then((transactionResponse) => {
               messageApi.open({
                 type: "success",
-                content: "Transaction successful",
+                content: "Transaction submitted",
               });
               setStep(1);
               setIsStepOne(false);
@@ -312,7 +312,7 @@ const Home = () => {
       .then((transactionResponse) => {
         messageApi.open({
           type: "success",
-          content: "Transaction successful",
+          content: "Transaction submitted",
         });
         setStep(0);
         setIsStepOne(true);
