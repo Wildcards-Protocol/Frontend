@@ -11,6 +11,7 @@ import { normalize } from "viem/ens";
 import { createWalletClient, custom, createPublicClient, http } from "viem";
 import Select from "react-select";
 import bg from "../bg.svg";
+import nft from "../nft.svg";
 import Web3 from "web3";
 
 const Home = () => {
@@ -110,7 +111,7 @@ const Home = () => {
     });
 
     return (
-      <>
+      <div style={{ marginBottom: 40, marginTop: 40 }}>
         {address ? (
           <div
             style={{
@@ -124,7 +125,6 @@ const Home = () => {
               <div
                 style={{
                   width: "400px",
-                  marginTop: "40px",
                 }}
               >
                 <Select
@@ -146,6 +146,8 @@ const Home = () => {
                   marginTop: "40px",
                   alignSelf: "center",
                   width: "250px",
+                  background: "#72DAF9",
+                  color: "#1E2DB6",
                 }}
                 onClick={handleConnect}
               >
@@ -160,7 +162,7 @@ const Home = () => {
             label={"Get Started"}
           />
         )}
-      </>
+      </div>
     );
   };
 
@@ -223,6 +225,8 @@ const Home = () => {
                   marginTop: "40px",
                   alignSelf: "center",
                   width: "250px",
+                  background: "#72DAF9",
+                  color: "#1E2DB6",
                 }}
                 onClick={handleLinkage}
               >
@@ -351,35 +355,44 @@ const Home = () => {
     >
       <div
         style={{
-          margin: 50,
-          padding: 70,
+          marginLeft: 100,
+          marginRight: 100,
           display: "flex",
           flexDirection: "column",
         }}
       >
         {contextHolder}
         <Header />
-        <>
+        <div style={{ background: "white", marginTop: 30 }}>
           <Steps
             current={step}
             labelPlacement="vertical"
             items={formSteps}
-            style={{ margin: 40 }}
+            style={{ marginTop: 40 }}
           />
-        </>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{
-              marginLeft: "30px",
-            }}
-          >
-            {isStepOne ? stepOneComponent() : stepTwoComponent()}
+          <div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                color: "#1E2DB6",
+              }}
+            >
+              <h3>Add Utility to NFT Collections</h3>
+              <img src={nft} width="301" height="283" />
+              <p
+                style={{
+                  marginLeft: 30,
+                  marginRight: 30,
+                  color: "#58595B",
+                }}
+              >
+                Link your ENS Domain to any NFT Collection and provide holders
+                with free wildcard sub-domains
+              </p>
+              {isStepOne ? stepOneComponent() : stepTwoComponent()}
+            </div>
           </div>
         </div>
       </div>
