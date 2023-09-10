@@ -7,6 +7,7 @@ import ActiveStateContext from "./Context";
 const Header = () => {
   useAccount({
     onConnect({ address, connector, isReconnected }) {
+      console.log(address);
       setAddress(address);
       setIsConnected(true);
     },
