@@ -13,10 +13,15 @@ import Select from "react-select";
 import bg from "../bg.svg";
 import nft from "../nft.svg";
 import Web3 from "web3";
+import "viem/window";
+import { ethers } from "ethers";
+import { useWalletClient } from "wagmi";
+import { writeContract } from "@wagmi/core";
 
 const Home = () => {
-  const { address } = useContext(ActiveStateContext);
+  const { address, signer } = useContext(ActiveStateContext);
   const [messageApi, contextHolder] = message.useMessage();
+  const { data: wc } = useWalletClient();
 
   const resolverAbi = [
     {
@@ -73,12 +78,6 @@ const Home = () => {
     },
   ];
 
-  useEffect(() => {
-    if (address) {
-      fetchAddressDomains();
-    }
-  }, [address]);
-
   const walletClient = createWalletClient({
     chain: mainnet,
     transport: window.ethereum ? custom(window.ethereum) : http(),
@@ -88,6 +87,13 @@ const Home = () => {
     chain: mainnet,
     transport: http(),
   });
+
+  useEffect(() => {
+    console.log("Address value is " + address);
+    if (address) {
+      fetchAddressDomains();
+    }
+  }, [address]);
 
   const isMobile = window.innerWidth <= 400;
   const [domainList, setDomainList] = useState([]);
@@ -297,35 +303,74 @@ const Home = () => {
   };
 
   const handleLinkage = () => {
-    walletClient
-      .writeContract({
-        address: "0x53e42d7b919C72678996C3F3486F93E75946A47C",
-        abi: linkedContractAbi,
-        functionName: "setLinkedContract",
-        args: [
-          domainSelectedFromList.value,
-          networkSelectedFromList.value,
-          nftAddress.target.value,
-        ],
-        account: address,
-      })
-      .then((transactionResponse) => {
-        messageApi.open({
-          type: "success",
-          content: "Transaction submitted",
-        });
-        setStep(0);
-        setIsStepOne(true);
-      })
-      .catch((error) => {
-        messageApi.open({
-          type: "error",
-          content: "Transaction failed.",
-        });
-      });
+    writeContract({
+      address: "0x53e42d7b919C72678996C3F3486F93E75946A47C",
+      abi: linkedContractAbi,
+      functionName: "setLinkedContract",
+      args: [
+        domainSelectedFromList.value,
+        networkSelectedFromList.value,
+        nftAddress.target.value,
+      ],
+    }).then((res) => {
+      console.log("Res " + res);
+    });
+
+    // const ensContract = getContract({
+    //   address: "0x53e42d7b919C72678996C3F3486F93E75946A47C",
+    //   abi: linkedContractAbi,
+    //   wc,
+    // });
+
+    // ensContract.write.setLinkedContract(
+    //   domainSelectedFromList.value,
+    //   networkSelectedFromList.value,
+    //   nftAddress.target.value
+    // );
+
+    // ensContract
+    //   .setLinkedContract(
+    //     domainSelectedFromList.value,
+    //     networkSelectedFromList.value,
+    //     nftAddress.target.value
+    //   )
+    //   .then((transactionResponse) => {
+    //     console.log("success " + transactionResponse);
+    //   })
+    //   .catch((error) => {
+    //     console.log("failed " + error);
+    //   });
+    // walletClient
+    //   .writeContract({
+    //     address: "0x53e42d7b919C72678996C3F3486F93E75946A47C",
+    //     abi: linkedContractAbi,
+    //     functionName: "setLinkedContract",
+    //     args: [
+    //       domainSelectedFromList.value,
+    //       networkSelectedFromList.value,
+    //       nftAddress.target.value,
+    //     ],
+    //     account: address,
+    //   })
+    //   .then((transactionResponse) => {
+    //     messageApi.open({
+    //       type: "success",
+    //       content: "Transaction submitted",
+    //     });
+    //     setStep(0);
+    //     setIsStepOne(true);
+    //   })
+    //   .catch((error) => {
+    //     console.log("Linkage error is " + error);
+    //     messageApi.open({
+    //       type: "error",
+    //       content: "Transaction failed.",
+    //     });
+    //   });
   };
 
   const handleSelection = (valueSelected) => {
+    console.log("windv is " + window.ethereum);
     const web3 = new Web3(window.ethereum);
     web3.eth.ens.getOwner(valueSelected.value).then(function (address) {
       if (address === "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401") {

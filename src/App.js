@@ -35,11 +35,14 @@ const wagmiConfig = createConfig({
 const App = () => {
   const [address, setAddress] = useState("");
   const [isConnected, setIsConnected] = useState(null);
+  const [signer, setSigner] = useState({});
   const context = {
     isConnected,
     setIsConnected,
     address,
     setAddress,
+    signer,
+    setSigner,
   };
 
   return (
