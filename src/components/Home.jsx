@@ -4,24 +4,20 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Header from "./Header";
 import ActiveStateContext from "./Context";
 import React, { useContext, useEffect, useState } from "react";
-import { Button, message, Space, Steps, Input } from "antd";
+import { Button, message, Select, Space, Steps, Input } from "antd";
 import "../App.css";
-import { flare, mainnet } from "viem/chains";
+import { mainnet } from "viem/chains";
 import { normalize } from "viem/ens";
-import { createWalletClient, custom, createPublicClient, http } from "viem";
-import Select from "react-select";
+import { createPublicClient, http } from "viem";
 import bg from "../bg.svg";
 import nft from "../nft.svg";
 import Web3 from "web3";
 import "viem/window";
-import { ethers } from "ethers";
-import { useWalletClient } from "wagmi";
 import { writeContract } from "@wagmi/core";
 
 const Home = () => {
-  const { address, signer } = useContext(ActiveStateContext);
+  const { address } = useContext(ActiveStateContext);
   const [messageApi, contextHolder] = message.useMessage();
-  const { data: wc } = useWalletClient();
 
   const resolverAbi = [
     {
@@ -78,24 +74,17 @@ const Home = () => {
     },
   ];
 
-  const walletClient = createWalletClient({
-    chain: mainnet,
-    transport: window.ethereum ? custom(window.ethereum) : http(),
-  });
-
   const publicClient = createPublicClient({
     chain: mainnet,
     transport: http(),
   });
 
   useEffect(() => {
-    console.log("Address value is " + address);
     if (address) {
       fetchAddressDomains();
     }
   }, [address]);
 
-  const isMobile = window.innerWidth <= 400;
   const [domainList, setDomainList] = useState([]);
   const [isStepOne, setIsStepOne] = useState(true);
   const [step, setStep] = useState(0);
@@ -117,7 +106,7 @@ const Home = () => {
     });
 
     return (
-      <div style={{ marginBottom: 40, marginTop: 40 }}>
+      <div style={{ marginBottom: 40, marginTop: 20 }}>
         {address ? (
           <div
             style={{
@@ -128,20 +117,26 @@ const Home = () => {
             }}
           >
             <Space wrap>
-              <div
+              <Select
                 style={{
-                  width: "400px",
+                  alignSelf: "center",
+                  width: "200px",
                 }}
-              >
-                <Select
-                  placeholder="Select your ENS name"
-                  options={newDomainList}
-                  onChange={handleSelection}
-                  styles={{
-                    width: 200,
-                  }}
-                />
-              </div>
+                allowClear
+                showSearch
+                placeholder="Select your ENS name"
+                options={newDomainList}
+                onChange={handleSelection}
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  (option?.label ?? "").includes(input)
+                }
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "")
+                    .toLowerCase()
+                    .localeCompare((optionB?.label ?? "").toLowerCase())
+                }
+              />
             </Space>
             <Space wrap>
               <Button
@@ -151,9 +146,9 @@ const Home = () => {
                 style={{
                   marginTop: "40px",
                   alignSelf: "center",
-                  width: "250px",
                   background: "#72DAF9",
                   color: "#1E2DB6",
+                  display: "inline-block",
                 }}
                 onClick={handleConnect}
               >
@@ -185,42 +180,35 @@ const Home = () => {
             }}
           >
             <Space wrap>
-              <div
+              <Select
+                placeholder="Select your network"
                 style={{
-                  width: "400px",
-                  marginTop: "40px",
+                  alignSelf: "center",
+                  width: "200px",
                 }}
-              >
-                <Select
-                  placeholder="Select your network"
-                  autoFocus={true}
-                  options={[
-                    {
-                      value: 1,
-                      label: "Ethereum",
-                    },
-                    {
-                      value: 10,
-                      label: "Optimism",
-                    },
-                  ]}
-                  onChange={setNetworkSelectedFromList}
-                />
-              </div>
+                options={[
+                  {
+                    value: 1,
+                    label: "Ethereum",
+                  },
+                  {
+                    value: 10,
+                    label: "Optimism",
+                  },
+                ]}
+                onChange={setNetworkSelectedFromList}
+              />
             </Space>
             <Space wrap>
-              <div
+              <Input
+                placeholder="Enter NFT address"
                 style={{
-                  width: "400px",
-                  marginTop: "40px",
+                  color: "hsl(0, 0%, 50%)",
+                  width: "200px",
+                  marginTop: 20,
                 }}
-              >
-                <Input
-                  placeholder="Enter NFT address"
-                  style={{ minHeight: "38px", color: "hsl(0, 0%, 50%)" }}
-                  onChange={setNftAddress}
-                />
-              </div>
+                onChange={setNftAddress}
+              />
             </Space>
 
             <Space wrap>
@@ -230,7 +218,6 @@ const Home = () => {
                 style={{
                   marginTop: "40px",
                   alignSelf: "center",
-                  width: "250px",
                   background: "#72DAF9",
                   color: "#1E2DB6",
                 }}
@@ -264,23 +251,21 @@ const Home = () => {
   const handleConnect = () => {
     publicClient
       .getEnsResolver({
-        name: normalize(domainSelectedFromList.value),
+        name: normalize(domainSelectedFromList),
       })
       .then((resolverAddress) => {
         const resolve =
           resolverAddress === "0x53e42d7b919C72678996C3F3486F93E75946A47C";
         if (!resolve) {
-          walletClient
-            .writeContract({
-              address: resolverContractAddress,
-              abi: resolverAbi,
-              functionName: "setResolver",
-              args: [
-                utils.namehash(domainSelectedFromList.value),
-                "0x53e42d7b919C72678996C3F3486F93E75946A47C",
-              ],
-              account: address,
-            })
+          writeContract({
+            address: resolverContractAddress,
+            abi: resolverAbi,
+            functionName: "setResolver",
+            args: [
+              utils.namehash(domainSelectedFromList),
+              "0x53e42d7b919C72678996C3F3486F93E75946A47C",
+            ],
+          })
             .then((transactionResponse) => {
               messageApi.open({
                 type: "success",
@@ -308,70 +293,31 @@ const Home = () => {
       abi: linkedContractAbi,
       functionName: "setLinkedContract",
       args: [
-        domainSelectedFromList.value,
-        networkSelectedFromList.value,
+        domainSelectedFromList,
+        networkSelectedFromList,
         nftAddress.target.value,
       ],
-    }).then((res) => {
-      console.log("Res " + res);
-    });
-
-    // const ensContract = getContract({
-    //   address: "0x53e42d7b919C72678996C3F3486F93E75946A47C",
-    //   abi: linkedContractAbi,
-    //   wc,
-    // });
-
-    // ensContract.write.setLinkedContract(
-    //   domainSelectedFromList.value,
-    //   networkSelectedFromList.value,
-    //   nftAddress.target.value
-    // );
-
-    // ensContract
-    //   .setLinkedContract(
-    //     domainSelectedFromList.value,
-    //     networkSelectedFromList.value,
-    //     nftAddress.target.value
-    //   )
-    //   .then((transactionResponse) => {
-    //     console.log("success " + transactionResponse);
-    //   })
-    //   .catch((error) => {
-    //     console.log("failed " + error);
-    //   });
-    // walletClient
-    //   .writeContract({
-    //     address: "0x53e42d7b919C72678996C3F3486F93E75946A47C",
-    //     abi: linkedContractAbi,
-    //     functionName: "setLinkedContract",
-    //     args: [
-    //       domainSelectedFromList.value,
-    //       networkSelectedFromList.value,
-    //       nftAddress.target.value,
-    //     ],
-    //     account: address,
-    //   })
-    //   .then((transactionResponse) => {
-    //     messageApi.open({
-    //       type: "success",
-    //       content: "Transaction submitted",
-    //     });
-    //     setStep(0);
-    //     setIsStepOne(true);
-    //   })
-    //   .catch((error) => {
-    //     console.log("Linkage error is " + error);
-    //     messageApi.open({
-    //       type: "error",
-    //       content: "Transaction failed.",
-    //     });
-    //   });
+    })
+      .then((transactionResponse) => {
+        messageApi.open({
+          type: "success",
+          content: "Transaction successful",
+        });
+        setStep(0);
+        setIsStepOne(true);
+      })
+      .catch((error) => {
+        messageApi.open({
+          type: "error",
+          content: "Transaction failed.",
+        });
+      });
   };
 
   const handleSelection = (valueSelected) => {
-    console.log("windv is " + window.ethereum);
-    const web3 = new Web3(window.ethereum);
+    const web3 = new Web3(
+      new Web3.providers.HttpProvider(process.env.REACT_APP_TRANSPORT_HTTP_URL)
+    );
     web3.eth.ens.getOwner(valueSelected.value).then(function (address) {
       if (address === "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401") {
         setResolverContractAddress(address);
@@ -396,7 +342,12 @@ const Home = () => {
 
   return (
     <div
-      style={{ backgroundImage: `url(${bg})`, height: "100vh", width: "100%" }}
+      style={{
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        height: "100vh",
+        width: "100%",
+      }}
     >
       <div
         style={{
@@ -408,7 +359,7 @@ const Home = () => {
       >
         {contextHolder}
         <Header />
-        <div style={{ background: "white", marginTop: 30 }}>
+        <div style={{ background: "white", marginTop: 30, padding: 10 }}>
           <Steps
             current={step}
             labelPlacement="vertical"
@@ -422,15 +373,25 @@ const Home = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 color: "#1E2DB6",
+                padding: 10,
               }}
             >
               <h3>Add Utility to NFT Collections</h3>
-              <img src={nft} width="301" height="283" />
+              <img
+                src={nft}
+                style={{
+                  width: "100%",
+                  height: 200,
+                  objectFit: "contain",
+                  padding: 10,
+                }}
+              />
               <p
                 style={{
                   marginLeft: 30,
                   marginRight: 30,
                   color: "#58595B",
+                  padding: 10,
                 }}
               >
                 Link your ENS Domain to any NFT Collection and provide holders

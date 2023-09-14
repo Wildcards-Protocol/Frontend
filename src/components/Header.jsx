@@ -6,13 +6,11 @@ import { useAccount, useWalletClient } from "wagmi";
 
 const Header = () => {
   useAccount({
-    onConnect({ address, connector, isReconnected }) {
-      //console.log("Connected " + address);
+    onConnect({ address }) {
       setAddress(address);
       setIsConnected(true);
     },
     onDisconnect() {
-      //console.log("Disconnected ");
       setAddress("");
       setIsConnected(false);
     },
