@@ -122,20 +122,9 @@ const Home = () => {
                   alignSelf: "center",
                   width: "200px",
                 }}
-                allowClear
-                showSearch
                 placeholder="Select your ENS name"
                 options={newDomainList}
                 onChange={handleSelection}
-                optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.label ?? "").includes(input)
-                }
-                filterSort={(optionA, optionB) =>
-                  (optionA?.label ?? "")
-                    .toLowerCase()
-                    .localeCompare((optionB?.label ?? "").toLowerCase())
-                }
               />
             </Space>
             <Space wrap>
