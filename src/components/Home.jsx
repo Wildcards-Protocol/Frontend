@@ -190,6 +190,10 @@ const Home = () => {
                     value: 10,
                     label: "Optimism",
                   },
+                  {
+                    value: 8453,
+                    label: "Base",
+                  },
                 ]}
                 onChange={setNetworkSelectedFromList}
               />
