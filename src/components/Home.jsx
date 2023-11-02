@@ -14,6 +14,7 @@ import nft from "../nft.svg";
 import Web3 from "web3";
 import "viem/window";
 import { writeContract } from "@wagmi/core";
+import { useEnsResolver } from "wagmi";
 
 const Home = () => {
   const { address } = useContext(ActiveStateContext);
@@ -94,8 +95,13 @@ const Home = () => {
   const [resolverContractAddress, setResolverContractAddress] = useState(
     "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
   );
+  const [resolverAddress, setResolverAddress] = useState("");
   const [isSetResolverButtonEnabled, setIsSetResolverButtonEnabled] =
     useState(true);
+
+  const { data, isError, isLoading } = useEnsResolver({
+    name: domainSelectedFromList,
+  });
 
   const stepOneComponent = () => {
     const newDomainList = domainList.map((domain) => {
@@ -238,42 +244,35 @@ const Home = () => {
   };
 
   const handleConnect = () => {
-    publicClient
-      .getEnsResolver({
-        name: normalize(domainSelectedFromList),
+    const resolve = data === "0x53e42d7b919C72678996C3F3486F93E75946A47C";
+    if (!resolve) {
+      writeContract({
+        address: resolverContractAddress,
+        abi: resolverAbi,
+        functionName: "setResolver",
+        args: [
+          utils.namehash(domainSelectedFromList),
+          "0x53e42d7b919C72678996C3F3486F93E75946A47C",
+        ],
       })
-      .then((resolverAddress) => {
-        const resolve =
-          resolverAddress === "0x53e42d7b919C72678996C3F3486F93E75946A47C";
-        if (!resolve) {
-          writeContract({
-            address: resolverContractAddress,
-            abi: resolverAbi,
-            functionName: "setResolver",
-            args: [
-              utils.namehash(domainSelectedFromList),
-              "0x53e42d7b919C72678996C3F3486F93E75946A47C",
-            ],
-          })
-            .then((transactionResponse) => {
-              messageApi.open({
-                type: "success",
-                content: "Transaction submitted",
-              });
-              setStep(1);
-              setIsStepOne(false);
-            })
-            .catch((error) => {
-              messageApi.open({
-                type: "error",
-                content: "Transaction failed.",
-              });
-            });
-        } else {
+        .then((transactionResponse) => {
+          messageApi.open({
+            type: "success",
+            content: "Transaction submitted",
+          });
           setStep(1);
           setIsStepOne(false);
-        }
-      });
+        })
+        .catch((error) => {
+          messageApi.open({
+            type: "error",
+            content: "Transaction failed.",
+          });
+        });
+    } else {
+      setStep(1);
+      setIsStepOne(false);
+    }
   };
 
   const handleLinkage = () => {
