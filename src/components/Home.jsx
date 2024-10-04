@@ -270,7 +270,7 @@ const Home = () => {
         .catch((error) => {
           messageApi.open({
             type: "error",
-            content: error,
+            content: error.message || error,
           });
         });
     } else {
