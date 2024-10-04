@@ -248,36 +248,54 @@ const Home = () => {
   };
 
   const handleConnect = () => {
-    const resolve = data === "0x53e42d7b919C72678996C3F3486F93E75946A47C";
-    if (!resolve) {
-      writeContract({
-        address: resolverContractAddress,
+  const resolve = data === "0x53e42d7b919C72678996C3F3486F93E75946A47C";
+  if (!resolve) {
+    const trySetResolver = (resolverAddress) => {
+      return writeContract({
+        address: resolverAddress,
         abi: resolverAbi,
         functionName: "setResolver",
         args: [
           utils.namehash(domainSelectedFromList),
           "0x53e42d7b919C72678996C3F3486F93E75946A47C",
         ],
-      })
-        .then((transactionResponse) => {
-          messageApi.open({
-            type: "success",
-            content: "Transaction submitted",
-          });
-          setStep(1);
-          setIsStepOne(false);
-        })
-        .catch((error) => {
-          messageApi.open({
-            type: "error",
-            content: "Transaction failed.",
-          });
+      });
+    };
+
+    // Attempt the first resolver contract address
+    trySetResolver(resolverContractAddress)
+      .then((transactionResponse) => {
+        messageApi.open({
+          type: "success",
+          content: "Transaction submitted",
         });
-    } else {
-      setStep(1);
-      setIsStepOne(false);
-    }
-  };
+        setStep(1);
+        setIsStepOne(false);
+      })
+      .catch((error) => {
+        // If the first attempt fails, try the alternate address
+        trySetResolver("0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401")
+          .then((transactionResponse) => {
+            messageApi.open({
+              type: "success",
+              content: "Transaction submitted",
+            });
+            setStep(1);
+            setIsStepOne(false);
+          })
+          .catch((fallbackError) => {
+            // If both attempts fail, show the error
+            messageApi.open({
+              type: "error",
+              content: "Transaction Failed",
+            });
+          });
+      });
+  } else {
+    setStep(1);
+    setIsStepOne(false);
+  }
+};
 
   const handleLinkage = () => {
     writeContract({
