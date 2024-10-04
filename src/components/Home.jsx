@@ -270,7 +270,7 @@ const Home = () => {
         .catch((error) => {
           messageApi.open({
             type: "error",
-            content: "Transaction failed.",
+            content: error,
           });
         });
     } else {
